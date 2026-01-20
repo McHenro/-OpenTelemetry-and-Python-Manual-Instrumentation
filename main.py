@@ -30,3 +30,10 @@ def process_order(order_id: int):
         span.set_attribute("order.total", total)
 
         return total
+
+def calculate_price(order_id: int):
+    with tracer.start_as_current_span("calculate_price") as span:
+        span.set_attribute("order.id", order_id)
+
+        time.sleep(0.5)
+        return order_id * 100
