@@ -5,8 +5,8 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
 )
 
-
 import time
+
 
 provider = TracerProvider()
 processor = BatchSpanProcessor(ConsoleSpanExporter())
@@ -17,7 +17,6 @@ trace.set_tracer_provider(provider)
 
 # Creates a tracer from the global tracer provider
 tracer = trace.get_tracer("my.tracer.name")
-
 
 def process_order(order_id: int):
     with tracer.start_as_current_span("process_order") as span:
@@ -37,3 +36,7 @@ def calculate_price(order_id: int):
 
         time.sleep(0.5)
         return order_id * 100
+
+if __name__ == "__main__":
+    result = (process_order(3))
+    print(result)
