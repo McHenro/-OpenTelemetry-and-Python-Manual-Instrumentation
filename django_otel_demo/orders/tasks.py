@@ -2,7 +2,7 @@ import time
 from celery import shared_task
 from opentelemetry import trace
 
-tracer = trace.get_tracer(__name__)
+tracer = trace.get_tracer("orders.tasks")
 
 @shared_task
 def process_order_task(order_id: int):
