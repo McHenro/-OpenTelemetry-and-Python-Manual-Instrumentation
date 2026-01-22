@@ -11,9 +11,29 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+# OpenTelemetry Setup
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.resources import Resource, SERVICE_NAME
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+#Configure tracing once (global)
+resource = Resource.create({
+    SERVICE_NAME: "django-otel-demo",
+    "service.version": "0.1.0",
+    "deployment.environment": "local",
+})
+
+provider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(ConsoleSpanExporter())
+provider.add_span_processor(processor)
+
+trace.set_tracer_provider(provider)
+
 
 
 # Quick-start development settings - unsuitable for production
