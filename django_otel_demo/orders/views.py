@@ -1,8 +1,12 @@
 from opentelemetry import trace
+from opentelemetry import metrics
 from django.http import JsonResponse
 from .tasks import process_order_task
+import time
 
 tracer = trace.get_tracer("orders.views")
+meter = metrics.get_meter("orders.metrics")
+
 
 def create_order(request):
     with tracer.start_as_current_span("create_order_view") as span:
