@@ -1,14 +1,14 @@
 from opentelemetry import trace
-from opentelemetry import metrics
+from .metrics import http_request_latency
 from django.http import JsonResponse
 from .tasks import process_order_task
 import time
 
 tracer = trace.get_tracer("orders.views")
-meter = metrics.get_meter("orders.metrics")
-
 
 def create_order(request):
+    start_time = time.time()
+
     with tracer.start_as_current_span("create_order_view") as span:
         order_id = 42
         span.set_attribute("order.id", order_id)
@@ -17,8 +17,20 @@ def create_order(request):
         # Enqueue async work instead of doing it inline
         process_order_task.delay(order_id)
 
-        return JsonResponse({
+        response = JsonResponse({
             "message": "Order processing started",
             "order_id": order_id
         })
+
+    # Record latency AFTER response logic
+    duration_ms = (time.time() - start_time) * 1000
+    http_request_latency.record(
+        duration_ms,
+        attributes={
+            "http.method": request.method,
+            "http.route": "/orders/create"
+        }
+    )
+
+    return response
 
