@@ -11,11 +11,19 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-# OpenTelemetry Setup
+# OpenTelemetry Setup For Traces
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.resources import Resource, SERVICE_NAME
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+# from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+
+# OpenTelemetry Setup For Metrics
+from opentelemetry import metrics
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,12 +36,23 @@ resource = Resource.create({
     "deployment.environment": "local",
 })
 
-provider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(ConsoleSpanExporter())
-provider.add_span_processor(processor)
+trace_provider = TracerProvider(resource=resource)
+otlp_trace_exporter = OTLPSpanExporter(
+    endpoint="http://localhost:4318/v1/traces"
+)
 
-trace.set_tracer_provider(provider)
+span_processor = BatchSpanProcessor(otlp_trace_exporter)
+trace_provider.add_span_processor(span_processor)
+trace.set_tracer_provider(trace_provider)
 
+# Configure Metrics globally
+otlp_metric_exporter = OTLPMetricExporter(
+        endpoint="http://localhost:4318/v1/metrics"
+    )
+
+metric_reader = PeriodicExportingMetricReader(otlp_metric_exporter, export_interval_millis=5000)
+metrics_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+metrics.set_meter_provider(metrics_provider)
 
 
 # Quick-start development settings - unsuitable for production
