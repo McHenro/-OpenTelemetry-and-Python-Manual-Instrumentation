@@ -17,3 +17,15 @@ celery_task_duration = meter.create_histogram(
     unit="ms",
     description="Celery task execution duration"
 )
+
+# HTTP error counter
+http_error_counter = meter.create_counter(
+    name="http.request.errors",
+    description="Number of failed HTTP requests"
+)
+
+# Celery task error counter
+celery_error_counter = meter.create_counter(
+    name="celery.task.errors",
+    description="Number of failed Celery tasks"
+)
